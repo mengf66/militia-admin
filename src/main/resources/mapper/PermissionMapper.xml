@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feng.militia_admin.mapper.PermissionMapper">
+
+    <select id="selectPermission" resultType="java.lang.String">
+        SELECT permission FROM permission WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="selectPermissionsByIds" resultType="com.feng.militia_admin.model.domain.Permission">
+        SELECT id, name, permission, menu_type, create_time, update_time
+        FROM permission
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_delete = 0
+        ORDER BY id
+    </select>
+
+</mapper>

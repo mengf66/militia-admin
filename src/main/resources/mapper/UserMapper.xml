@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feng.militia_admin.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="com.feng.militia_admin.model.domain.User">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="phone" column="phone" />
+            <result property="gender" column="gender" />
+            <result property="password" column="password" />
+            <result property="orgId" column="org_id" />
+            <result property="roleId" column="role_id" />
+            <result property="status" column="status" />
+            <result property="isDelete" column="is_delete" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        u.id AS userId,
+        u.name,
+        u.phone,
+        u.gender,
+        u.org_id AS orgId,
+        o.name AS orgName,
+        o.org_level AS orgLevel,
+        u.role,
+        u.status
+    </sql>
+
+
+    <sql id="Base_Org_Join">
+        FROM `user` u
+        INNER JOIN organization o ON u.org_id = o.id
+        WHERE o.path LIKE CONCAT(
+            (SELECT path FROM organization WHERE id = #{orgId} AND is_delete = 0),
+        '%'
+        )
+        AND o.is_delete = 0
+        AND u.is_delete = 0
+    </sql>
+
+
+    <sql id="Keyword_Condition">
+        <if test="keyword != null and keyword != ''">
+            AND (
+            u.name LIKE CONCAT('%', #{keyword}, '%')
+            OR u.phone LIKE CONCAT('%', #{keyword}, '%')
+            )
+        </if>
+    </sql>
+
+
+    <select id="selectUsersByOrgId" resultType="com.feng.militia_admin.model.vo.ShowUserInfoVo">
+        SELECT
+        <include refid="Base_Column_List" />
+        <include refid="Base_Org_Join" />
+        <include refid="Keyword_Condition" />
+        ORDER BY o.path, u.create_time DESC
+    </select>
+
+
+    <select id="selectUsersByOrgIdPage" resultType="com.feng.militia_admin.model.vo.ShowUserInfoVo">
+        SELECT
+        <include refid="Base_Column_List" />
+        <include refid="Base_Org_Join" />
+        <include refid="Keyword_Condition" />
+        ORDER BY o.path, u.create_time DESC
+    </select>
+
+    <select id="selectUsersByOrgIdOnly" resultType="com.feng.militia_admin.model.vo.ShowUserInfoVo">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM `user` u
+        INNER JOIN organization o ON u.org_id = o.id
+        WHERE u.org_id = #{orgId}
+        AND o.is_delete = 0
+        AND u.is_delete = 0
+        <include refid="Keyword_Condition" />
+        ORDER BY u.create_time DESC
+    </select>
+
+    <select id="countUsersGroupByOrg" resultType="java.util.HashMap">
+        SELECT
+        o.id AS orgId,
+        o.name AS orgName,
+        o.org_level AS orgLevel,
+        COUNT(u.id) AS userCount
+        <include refid="Base_Org_Join" />
+        GROUP BY o.id, o.name, o.org_level, o.path
+        ORDER BY o.path
+    </select>
+
+    <select id="getUserOrgId" resultType="java.lang.Long">
+        SELECT org_id
+        FROM `user`
+        WHERE id = #{userId}
+    </select>
+</mapper>

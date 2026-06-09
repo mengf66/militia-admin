@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feng.militia_admin.mapper.RoleMapper">
+
+    <resultMap id="BaseResultMap" type="com.feng.militia_admin.model.domain.Role">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="menuIds" column="menu_ids" />
+            <result property="isDelete" column="is_delete" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+            <result property="role" column="role" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,menu_ids,is_delete,create_time,update_time,
+        role
+    </sql>
+</mapper>
