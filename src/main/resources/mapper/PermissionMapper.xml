@@ -5,20 +5,31 @@
 <mapper namespace="com.feng.militia_admin.mapper.PermissionMapper">
 
     <select id="selectPermission" resultType="java.lang.String">
-        SELECT permission FROM permission WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
+        SELECT permission FROM permission WHERE is_delete = 0
+        <if test="ids != null and ids.size() > 0">
+            AND id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="ids == null or ids.size() == 0">
+            AND 1 = 0
+        </if>
     </select>
 
     <select id="selectPermissionsByIds" resultType="com.feng.militia_admin.model.domain.Permission">
         SELECT id, name, permission, menu_type, create_time, update_time
         FROM permission
-        WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        AND is_delete = 0
+        WHERE is_delete = 0
+        <if test="ids != null and ids.size() > 0">
+            AND id IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="ids == null or ids.size() == 0">
+            AND 1 = 0
+        </if>
         ORDER BY id
     </select>
 

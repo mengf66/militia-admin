@@ -83,11 +83,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         LoginResult result = new LoginResult();
         result.setUserId(user.getId());
 
+        // 查询完整 Role 对象，不限制字段，确保 typeHandler 生效
         LambdaQueryWrapper<Role> roleQueryWrapper = new LambdaQueryWrapper<>();
-        roleQueryWrapper.select(Role::getRole, Role::getMenuIds).eq(Role::getId, user.getRoleId());
+        roleQueryWrapper.eq(Role::getId, user.getRoleId());
         Role role = roleMapper.selectOne(roleQueryWrapper);
 
-        List<Permission> permissionList = permissionMapper.selectPermissionsByIds(role.getMenuIds());
+        // 安全处理 menuIds 为 null 的情况
+        List<Integer> menuIds = role != null && role.getMenuIds() != null ? role.getMenuIds() : Collections.emptyList();
+        List<Permission> permissionList = permissionMapper.selectPermissionsByIds(menuIds);
 
         List<String> permissions = permissionList.stream()
                 .map(Permission::getPermission)
@@ -99,7 +102,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         UserInfoVO userInfo = new UserInfoVO();
         userInfo.setName(user.getName());
-        userInfo.setRole(role.getRole());
+        userInfo.setRole(role != null ? role.getRole() : "");
+        userInfo.setRoleName(role != null ? role.getName() : "");
         userInfo.setPermissionList(permissions);
         userInfo.setMenus(menus);
         result.setUserInfo(userInfo);
@@ -120,12 +124,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         su.setId(user.getId());
         su.setName(user.getName());
 
+        // 查询完整 Role 对象，不限制字段
         LambdaQueryWrapper<Role> roleQueryWrapper = new LambdaQueryWrapper<>();
-        roleQueryWrapper.select(Role::getRole, Role::getMenuIds).eq(Role::getId, user.getRoleId());
+        roleQueryWrapper.eq(Role::getId, user.getRoleId());
         Role role = roleMapper.selectOne(roleQueryWrapper);
-        su.setRole(role.getRole());
+        su.setRole(role != null ? role.getRole() : "");
 
-        List<String> permissionList = permissionMapper.selectPermission(role.getMenuIds());
+        // 安全处理 menuIds 为 null 的情况
+        List<Integer> menuIds = role != null && role.getMenuIds() != null ? role.getMenuIds() : Collections.emptyList();
+        List<String> permissionList = permissionMapper.selectPermission(menuIds);
         su.setPermissionList(permissionList);
 
         return su;

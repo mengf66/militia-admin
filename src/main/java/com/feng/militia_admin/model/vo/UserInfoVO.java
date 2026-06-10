@@ -14,8 +14,11 @@ public class UserInfoVO {
     /** 用户名 */
     private String name;
 
-    /** 角色标识 */
+    /** 角色标识（英文，如 army） */
     private String role;
+
+    /** 角色名称（中文，如 军机关管理员） */
+    private String roleName;
 
     /**
      * 权限标识列表（如 militia:info:view）

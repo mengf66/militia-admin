@@ -52,6 +52,8 @@ public interface UserMapper extends BaseMapper<User> {
     );
 
     Long getUserOrgId(@Param("user_id") Long userId);
+
+    List<Long> getUserIds(@Param("org_id") Long orgId);
 }
 
 

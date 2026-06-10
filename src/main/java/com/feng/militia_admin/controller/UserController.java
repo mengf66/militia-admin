@@ -27,9 +27,9 @@ import java.util.List;
 @Slf4j
 public class UserController {
 
-    private UserService userService;
+    private final UserService userService;
 
-    private UserApplyService userApplyService;
+    private final UserApplyService userApplyService;
 
     @PreAuthorize("hasAuthority('militia:info:add')")
     @PostMapping("/add")

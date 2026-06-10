@@ -10,16 +10,6 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 314914.fgz
-#       session 失效时间（分钟）
-  session:
-      timeout: 86400
-      store-type: redis
-#    redis 配置
-  redis:
-    port: 6379
-    host: 192.168.208.130
-    database: 4
-    password: 314914.fgz
 mybatis-plus:
   configuration:
     default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
@@ -33,8 +23,11 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 jwt:
-  secret-key: "militia-admin-user"
+  secret-key: "militia-admin-user-secret-key-2024-very-long-safe"
   expiration-time: 86400000  # 24小时，单位毫秒
+
+login:
+  secret-salt: nimengshen
 
 logging:
   level:

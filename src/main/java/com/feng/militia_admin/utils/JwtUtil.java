@@ -3,10 +3,13 @@ package com.feng.militia_admin.utils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -24,6 +27,10 @@ public class JwtUtil {
     private static final String CLAIM_ROLE = "role";
     private static final String CLAIM_PERMISSIONS = "permissions";
 
+    private SecretKey getSecretKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    }
+
     /**
      * 生成包含用户ID、角色和权限信息的 Token
      */
@@ -38,7 +45,7 @@ public class JwtUtil {
                 .claim(CLAIM_PERMISSIONS, permissions != null ? permissions : new ArrayList<>())
                 .setIssuedAt(now)
                 .setExpiration(expirationDate)
-                .signWith(SignatureAlgorithm.HS256, secretKey)
+                .signWith(getSecretKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -85,7 +92,7 @@ public class JwtUtil {
     // 验证token是否有效
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(getSecretKey()).parseClaimsJws(token);
             return true;
         } catch (Exception e) {
             return false;
@@ -104,7 +111,7 @@ public class JwtUtil {
         }
         try {
             return Jwts.parser()
-                    .setSigningKey(secretKey)
+                    .setSigningKey(getSecretKey())
                     .parseClaimsJws(token)
                     .getBody();
         } catch (Exception e) {
