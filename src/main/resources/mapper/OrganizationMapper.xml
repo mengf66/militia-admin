@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feng.militia_admin.mapper.OrganizationMapper">
+
+    <resultMap id="BaseResultMap" type="com.feng.militia_admin.model.domain.Organization">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="orgLevel" column="org_level" />
+            <result property="orgType" column="org_type" />
+            <result property="parentId" column="parent_id" />
+            <result property="leaderId" column="leader_id" />
+            <result property="isDelete" column="is_delete" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,org_level,org_type,parent_id,leader_id,
+        is_delete,create_time,update_time
+    </sql>
+    <select id="selectSubordinates" resultMap="BaseResultMap">
+        SELECT * FROM organization
+        WHERE is_delete = 0
+        AND path LIKE CONCAT(
+            (SELECT path FROM organization WHERE id = #{orgId} AND is_delete = 0),
+            '%'
+        )
+        AND id != #{orgId}
+        ORDER BY path ASC
+    </select>
+
+    <select id="selectSelfAndSubordinates" resultMap="BaseResultMap">
+        SELECT * FROM organization
+        WHERE is_delete = 0
+        AND path LIKE CONCAT(
+            (SELECT path FROM organization WHERE id = #{orgId} AND is_delete = 0),
+            '%'
+        )
+        ORDER BY path ASC
+    </select>
+
+</mapper>

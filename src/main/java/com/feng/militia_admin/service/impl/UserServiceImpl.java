@@ -2,8 +2,10 @@ package com.feng.militia_admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.feng.militia_admin.mapper.OrganizationMapper;
 import com.feng.militia_admin.mapper.PermissionMapper;
 import com.feng.militia_admin.mapper.RoleMapper;
+import com.feng.militia_admin.model.domain.Organization;
 import com.feng.militia_admin.model.domain.Permission;
 import com.feng.militia_admin.model.domain.Role;
 import com.feng.militia_admin.model.domain.User;
@@ -50,6 +52,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Autowired
     private PermissionMapper permissionMapper;
 
+    @Autowired
+    private OrganizationMapper organizationMapper;
+
     @Override
     public LoginResult login(LoginRequest loginRequest) {
         try {
@@ -83,12 +88,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         LoginResult result = new LoginResult();
         result.setUserId(user.getId());
 
-        // 查询完整 Role 对象，不限制字段，确保 typeHandler 生效
         LambdaQueryWrapper<Role> roleQueryWrapper = new LambdaQueryWrapper<>();
         roleQueryWrapper.eq(Role::getId, user.getRoleId());
         Role role = roleMapper.selectOne(roleQueryWrapper);
 
-        // 安全处理 menuIds 为 null 的情况
         List<Integer> menuIds = role != null && role.getMenuIds() != null ? role.getMenuIds() : Collections.emptyList();
         List<Permission> permissionList = permissionMapper.selectPermissionsByIds(menuIds);
 
@@ -100,10 +103,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 .filter(p -> p.getMenuType() != null && (p.getMenuType() == 0 || p.getMenuType() == 1))
                 .collect(Collectors.toList());
 
+        Long userOrgId = user.getOrgId();
+        String userOrgName = "";
+        if (userOrgId != null) {
+            Organization org = organizationMapper.selectById(userOrgId);
+            if (org != null) {
+                userOrgName = org.getName();
+            }
+        }
+
         UserInfoVO userInfo = new UserInfoVO();
+        userInfo.setUserId(user.getId());
         userInfo.setName(user.getName());
         userInfo.setRole(role != null ? role.getRole() : "");
         userInfo.setRoleName(role != null ? role.getName() : "");
+        userInfo.setOrgId(userOrgId);
+        userInfo.setOrgName(userOrgName);
         userInfo.setPermissionList(permissions);
         userInfo.setMenus(menus);
         result.setUserInfo(userInfo);

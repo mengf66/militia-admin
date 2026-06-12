@@ -26,7 +26,7 @@
         u.org_id AS orgId,
         o.name AS orgName,
         o.org_level AS orgLevel,
-        u.role,
+        r.name AS role,
         u.status
     </sql>
 
@@ -34,6 +34,7 @@
     <sql id="Base_Org_Join">
         FROM `user` u
         INNER JOIN organization o ON u.org_id = o.id
+        LEFT JOIN role r ON u.role_id = r.id
         WHERE o.path LIKE CONCAT(
             (SELECT path FROM organization WHERE id = #{orgId} AND is_delete = 0),
         '%'
@@ -103,5 +104,24 @@
         SELECT id
         FROM `user`
         WHERE org_id = #{org_id}
+    </select>
+
+    <select id="selectAuditUsersByOrgPath" resultType="com.feng.militia_admin.model.domain.User">
+        SELECT DISTINCT u.id, u.name, u.phone, u.gender, u.password, u.org_id AS orgId, u.role_id AS roleId, u.status, u.is_delete AS isDelete, u.create_time AS createTime, u.update_time AS updateTime
+        FROM `user` u
+        INNER JOIN organization o ON u.org_id = o.id
+        WHERE u.is_delete = 0
+        AND o.is_delete = 0
+        AND (
+            o.path LIKE CONCAT(
+                (SELECT path FROM organization WHERE id = #{orgId} AND is_delete = 0),
+                '%'
+            )
+            OR o.id = #{orgId}
+        )
+        AND u.role_id IN
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
     </select>
 </mapper>

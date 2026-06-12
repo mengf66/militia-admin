@@ -51,9 +51,14 @@ public interface UserMapper extends BaseMapper<User> {
             @Param("orgId") Long orgId
     );
 
-    Long getUserOrgId(@Param("user_id") Long userId);
+    Long getUserOrgId(@Param("userId") Long userId);
 
     List<Long> getUserIds(@Param("org_id") Long orgId);
+
+    /**
+     * 查询指定组织及其上级组织中有特定权限的用户
+     */
+    List<User> selectAuditUsersByOrgPath(@Param("orgId") Long orgId, @Param("roleIds") List<Long> roleIds);
 }
 
 

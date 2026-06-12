@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feng.militia_admin.mapper.AnnouncementMapper">
+
+    <resultMap id="BaseResultMap" type="com.feng.militia_admin.model.domain.Announcement">
+            <id property="id" column="id" />
+            <result property="title" column="title" />
+            <result property="content" column="content" />
+            <result property="type" column="type" />
+            <result property="publishOrgId" column="publish_org_id" />
+            <result property="targetOrgIds" column="target_org_ids" />
+            <result property="status" column="status" />
+            <result property="createUserId" column="create_user_id" />
+            <result property="updateUserId" column="update_user_id" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+            <result property="isDelete" column="is_delete" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,title,content,type,publish_org_id,target_org_ids,
+        status,create_user_id,update_user_id,create_time,update_time,
+        is_delete
+    </sql>
+
+    <select id="selectSuperiorAnnouncements" resultType="com.feng.militia_admin.model.vo.ShowAnnounceInfoVo">
+        SELECT
+            a.id,
+            a.title,
+            a.content,
+            a.type,
+            a.publish_org_id AS publishOrgId,
+            a.target_org_ids AS targetOrgIds,
+            a.status,
+            a.create_time AS createTime
+        FROM announcement a
+                 INNER JOIN organization pub ON a.publish_org_id = pub.id
+                 INNER JOIN organization curr ON curr.id = #{orgId}
+        WHERE a.status = 1
+          AND a.is_delete = 0
+          AND (
+              -- 当前组织是发布组织的下属组织（下级看上级）
+              curr.path LIKE CONCAT(pub.path, '%')
+              -- 或者当前用户就是发布者
+              OR a.publish_org_id = #{orgId}
+          )
+          AND (
+            a.target_org_ids IS NULL
+                OR a.target_org_ids = ''
+                OR FIND_IN_SET(#{orgId}, a.target_org_ids) > 0
+                -- 发布者不受目标组织限制，总能看到自己发布的
+                OR a.publish_org_id = #{orgId}
+            )
+        ORDER BY a.create_time DESC
+    </select>
+</mapper>

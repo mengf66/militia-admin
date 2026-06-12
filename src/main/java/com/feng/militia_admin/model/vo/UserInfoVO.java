@@ -11,6 +11,17 @@ import java.util.List;
 @Data
 public class UserInfoVO {
 
+    /**
+     * 用户ID
+     */
+    private Long userId;
+
+    /** 组织ID */
+    private Long orgId;
+
+    /** 组织名称 */
+    private String orgName;
+
     /** 用户名 */
     private String name;
 

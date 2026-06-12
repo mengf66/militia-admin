@@ -8,12 +8,18 @@ import com.feng.militia_admin.model.request.ApproveUserRequest;
 import com.feng.militia_admin.model.vo.ShowUserInfoVo;
 import com.feng.militia_admin.service.UserApplyService;
 import com.feng.militia_admin.service.UserService;
+import com.feng.militia_admin.mapper.UserMapper;
+import com.feng.militia_admin.utils.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author FengMeng
@@ -31,6 +37,8 @@ public class UserController {
 
     private final UserApplyService userApplyService;
 
+    private final UserMapper userMapper;
+
     @PreAuthorize("hasAuthority('militia:info:add')")
     @PostMapping("/add")
     public R<String> addUser(@RequestBody AddUserApplyRequest addUserApplyRequest) {
@@ -46,8 +54,39 @@ public class UserController {
 
     @PreAuthorize("hasAuthority('militia:info:view')")
     @GetMapping("/show")
-    public R<List<ShowUserInfoVo>> showUser() {
-        return R.ok(userService.showOrgUser());
+    public R<Map<String, Object>> showUser(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        List<ShowUserInfoVo> allList = userService.showOrgUser();
+        int total = allList.size();
+        int from = (page - 1) * size;
+        int to = Math.min(from + size, total);
+        List<ShowUserInfoVo> subList = from < total ? allList.subList(from, to) : new ArrayList<>();
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", subList);
+        result.put("total", total);
+        result.put("page", page);
+        result.put("size", size);
+        return R.ok(result);
+    }
+
+    @PreAuthorize("hasAuthority('audit:person')")
+    @GetMapping("/apply-list")
+    public R<Map<String, Object>> showApplyList(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Long orgId = userMapper.getUserOrgId(SecurityUtil.getCurrentUserId());
+        List<UserApply> allList = userApplyService.getApplyList(orgId);
+        int total = allList.size();
+        int from = (page - 1) * size;
+        int to = Math.min(from + size, total);
+        List<UserApply> subList = from < total ? allList.subList(from, to) : new ArrayList<>();
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", subList);
+        result.put("total", total);
+        result.put("page", page);
+        result.put("size", size);
+        return R.ok(result);
     }
 
     @PreAuthorize("hasAuthority('audit:person')")
@@ -62,6 +101,12 @@ public class UserController {
         if(i != 1) {
             return R.failed("审批出错");
         }
+
+        // 审批通过后，异步插入用户表
+        if (approveUserRequest.getStatus() != null && approveUserRequest.getStatus() == 0) {
+            userApplyService.insertUserFromApply(approveUserRequest.getId());
+        }
+
         return R.ok("审批完成");
     }
 

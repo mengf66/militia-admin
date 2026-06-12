@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.feng.militia_admin.mapper.WorkSubmissionMapper">
+
+    <resultMap id="WorkSubmissionMap" type="com.feng.militia_admin.model.domain.WorkSubmission">
+        <id property="id" column="id" />
+        <result property="workId" column="work_id" />
+        <result property="orgId" column="org_id" />
+        <result property="content" column="content" />
+        <result property="fillStatus" column="fill_status" />
+        <result property="auditStatus" column="audit_status" />
+        <result property="auditRemark" column="audit_remark" />
+        <result property="auditUserId" column="audit_user_id" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+        <result property="isDelete" column="is_delete" />
+    </resultMap>
+
+    <resultMap id="BaseResultMap" type="com.feng.militia_admin.model.vo.ShowWorkSubmissionVo">
+        <id property="id" column="id" />
+        <result property="workId" column="work_id" />
+        <result property="workTitle" column="work_title" />
+        <result property="workType" column="work_type" />
+        <result property="orgId" column="org_id" />
+        <result property="orgName" column="org_name" />
+        <result property="content" column="content" />
+        <result property="fillStatus" column="fill_status" />
+        <result property="auditStatus" column="audit_status" />
+        <result property="auditRemark" column="audit_remark" />
+        <result property="auditUserName" column="audit_user_name" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        s.id,
+        s.work_id,
+        w.title AS work_title,
+        w.type AS work_type,
+        s.org_id,
+        o.name AS org_name,
+        s.content,
+        s.fill_status,
+        s.audit_status,
+        s.audit_remark,
+        au.name AS audit_user_name,
+        s.create_time,
+        s.update_time
+    </sql>
+
+    <!-- 军长/师机关：查看所有下属组织的填写记录 -->
+    <select id="selectSubmissionListByOrgId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM work_submission s
+        INNER JOIN `work` w ON s.work_id = w.id
+        INNER JOIN organization o ON s.org_id = o.id
+        LEFT JOIN `user` au ON s.audit_user_id = au.id
+        WHERE w.org_id IN (
+            SELECT id FROM organization
+            WHERE path LIKE CONCAT(
+                (SELECT path FROM organization WHERE id = #{orgId} AND is_delete = 0),
+                '%'
+            )
+            AND is_delete = 0
+        )
+        AND s.is_delete = 0
+        AND w.is_delete = 0
+        AND o.is_delete = 0
+        ORDER BY s.fill_status ASC, s.audit_status ASC, s.create_time DESC
+    </select>
+
+    <!-- 团机关：查看下属组织已提交的填写记录 -->
+    <select id="selectSubmissionListForAudit" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM work_submission s
+        INNER JOIN `work` w ON s.work_id = w.id
+        INNER JOIN organization o ON s.org_id = o.id
+        LEFT JOIN `user` au ON s.audit_user_id = au.id
+        WHERE s.fill_status = 1
+        AND s.org_id IN (
+            SELECT id FROM organization
+            WHERE path LIKE CONCAT(
+                (SELECT path FROM organization WHERE id = #{orgId} AND is_delete = 0),
+                '%'
+            )
+            AND is_delete = 0
+        )
+        AND s.is_delete = 0
+        AND w.is_delete = 0
+        AND o.is_delete = 0
+        ORDER BY s.audit_status ASC, s.create_time DESC
+    </select>
+
+    <!-- 营/连/分队干部：查看分配给自己的填写记录 -->
+    <select id="selectSubmissionListForFill" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM work_submission s
+        INNER JOIN `work` w ON s.work_id = w.id
+        INNER JOIN organization o ON s.org_id = o.id
+        LEFT JOIN `user` au ON s.audit_user_id = au.id
+        WHERE s.org_id = #{orgId}
+        AND s.is_delete = 0
+        AND w.is_delete = 0
+        AND o.is_delete = 0
+        ORDER BY s.fill_status ASC, s.create_time DESC
+    </select>
+
+    <!-- 根据 work_id 和 org_id 查询单条记录 -->
+    <select id="selectByWorkIdAndOrgId" resultMap="WorkSubmissionMap">
+        SELECT * FROM work_submission
+        WHERE work_id = #{workId} AND org_id = #{orgId}
+        AND is_delete = 0
+        LIMIT 1
+    </select>
+
+</mapper>

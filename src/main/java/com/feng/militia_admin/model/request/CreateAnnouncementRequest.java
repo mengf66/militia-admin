@@ -1,6 +1,5 @@
 package com.feng.militia_admin.model.request;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.util.Date;
